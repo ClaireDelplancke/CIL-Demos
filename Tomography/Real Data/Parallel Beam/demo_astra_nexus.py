@@ -11,7 +11,7 @@
 # All own imports
 from ccpi.framework import ImageData, ImageGeometry
 from ccpi.optimisation.algorithms import CGLS, FISTA
-from ccpi.optimisation.functions import Norm2Sq, L1Norm
+from ccpi.optimisation.functions import LeastSquares, L1Norm
 from ccpi.processors import CenterOfRotationFinder 
 from ccpi.io import NEXUSDataReader
 from ccpi.astra.operators import AstraProjector3DSimple
@@ -69,19 +69,29 @@ plt.show()
 
 # Set initial guess for reconstruction algorithms.
 print ("Initial guess")
-x_init = ImageData(geometry=ig)
+#x_init = ImageData(geometry=ig)
+#
+## Set tolerance and number of iterations for reconstruction algorithms.
+#opt = {'tol': 1e-4, 'iter': 100}
+#
+## First a CGLS reconstruction can be done:
+#CGLS_alg = CGLS()
+#CGLS_alg.set_up(x_init, Cop, padded_data)
+#CGLS_alg.max_iteration = 2000
+#CGLS_alg.update_objective_interval = 10
+#CGLS_alg.run(opt['iter'])
+#
+#x_CGLS = CGLS_alg.get_output()
 
-# Set tolerance and number of iterations for reconstruction algorithms.
-opt = {'tol': 1e-4, 'iter': 100}
 
-# First a CGLS reconstruction can be done:
-CGLS_alg = CGLS()
-CGLS_alg.set_up(x_init, Cop, padded_data)
-CGLS_alg.max_iteration = 2000
-CGLS_alg.update_objective_interval = 10
-CGLS_alg.run(opt['iter'])
 
+x_init = ig.allocate()  
+CGLS_alg = CGLS(x_init = x_init, operator = Cop, data = padded_data,
+             max_iteration = 2000,
+             update_objective_interval = 10)
+CGLS_alg.run(20, verbose = True)
 x_CGLS = CGLS_alg.get_output()
+
 
 # Fix color and slices for display
 v1 = -0.01
@@ -122,14 +132,13 @@ plt.show()
 
 # Create least squares object instance with projector and data.
 print ("Create least squares object instance with projector and data.")
-f = Norm2Sq(Cop,padded_data,c=0.5)
+f = LeastSquares(Cop,padded_data,c=0.5)
 
 # Run FISTA for least squares without constraints
-FISTA_alg = FISTA()
-FISTA_alg.set_up(x_init=x_init, f=f)
-FISTA_alg.max_iteration = 2000
-FISTA_alg.update_objective_interval = 10
-FISTA_alg.run(opt['iter'])
+FISTA_alg = FISTA(x_init=x_init, f=f,
+                  max_iteration = 2000,
+                  update_objective_interval = 10)
+FISTA_alg.run(20, verbose = True)
 x_FISTA = FISTA_alg.get_output()
 
 # Display ortho slices of reconstruction
@@ -166,11 +175,10 @@ lam = 30.0
 g0 = lam * L1Norm()
 
 # Run FISTA for least squares plus 1-norm function.
-FISTA_alg1 = FISTA()
-FISTA_alg1.set_up(x_init=x_init, f=f, g=g0)
-FISTA_alg1.max_iteration = 2000
-FISTA_alg1.update_objective_interval = 10
-FISTA_alg1.run(opt['iter'])
+FISTA_alg1 = FISTA(x_init=x_init, f=f, g=g0,
+                   max_iteration = 2000,
+                   update_objective_interval = 10)
+FISTA_alg1.run(20,verbose=True)
 x_FISTA1 = FISTA_alg1.get_output()
 
 # Display all reconstructions and decay of objective function
@@ -192,7 +200,7 @@ a.set_title('vertical')
 imgplot = plt.imshow(x_FISTA1.subset(vertical=v).as_array(),vmin=v1,vmax=v2)
 plt.colorbar()
 
-plt.suptitle('FISTA LS+1 reconstruction slices')
+plt.suptitle('FISTA LS+L1Norm reconstruction slices')
 plt.show()
 
 
@@ -207,6 +215,6 @@ b=fig.add_subplot(1,1,1)
 b.set_title('criteria')
 imgplot = plt.loglog(CGLS_alg.objective , label='CGLS')
 imgplot = plt.loglog(FISTA_alg.objective , label='FISTA LS')
-imgplot = plt.loglog(FISTA_alg1.objective, label='FISTA LS+1')
+imgplot = plt.loglog(FISTA_alg1.objective, label='FISTA LS+L1Norm')
 b.legend(loc='right')
 plt.show()
