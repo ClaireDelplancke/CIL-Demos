@@ -71,7 +71,7 @@ noisy_data = AcquisitionData( sin.as_array() + np.random.normal(0,3,ig.shape))
 
 # Setup and run the CGLS algorithm  
 alpha = 50
-Grad = Gradient(ig)
+Grad = Gradient(ig, backend = 'numpy')
 
 # Form Tikhonov as a Block CGLS structure
 op_CGLS = BlockOperator( Aop, alpha * Grad, shape=(2,1))
@@ -101,10 +101,10 @@ normK = op_PDHG.norm()
 sigma = 10
 tau = 1/(sigma*normK**2)
 
-pdhg = PDHG(f=f,g=g,operator=op_PDHG, tau=tau, sigma=sigma)
-pdhg.max_iteration = 1000
-pdhg.update_objective_interval = 200
-pdhg.run(1000, verbose=False)
+pdhg = PDHG(f=f,g=g,operator=op_PDHG, tau=tau, sigma=sigma,
+            max_iteration = 1000,
+            update_objective_interval = 200)
+pdhg.run(verbose=False)
 
 # Show results
 plt.figure(figsize=(10,10))

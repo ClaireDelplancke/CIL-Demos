@@ -96,7 +96,7 @@ plt.show()
 
 # Setup and run the CGLS algorithm  
 alpha = 2
-Grad = Gradient(ig)
+Grad = Gradient(ig, backend = 'numpy')
 Id = Identity(ig)
 
 # Form Tikhonov as a Block CGLS structure
@@ -104,10 +104,10 @@ op_CGLS = BlockOperator( Aop, alpha * Grad, shape=(2,1))
 block_data = BlockDataContainer(noisy_data, Grad.range_geometry().allocate())
 
 x_init = ig.allocate()      
-cgls = CGLS(x_init=x_init, operator=op_CGLS, data=block_data)
-cgls.max_iteration = 1000
-cgls.update_objective_interval = 50
-cgls.run(1000, verbose = True)
+cgls = CGLS(x_init=x_init, operator=op_CGLS, data=block_data,
+            max_iteration = 1000,
+            update_objective_interval = 50)
+cgls.run(verbose = True)
 
 # Show results
 plt.figure(figsize=(5,5))

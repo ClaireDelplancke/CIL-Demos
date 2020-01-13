@@ -64,22 +64,21 @@ alpha = 5
 
 ###############################################################################
 # Setup and run the FISTA algorithm
-operator = Gradient(ig)
+operator = Gradient(ig, backend = 'numpy')
 fidelity = L1Norm(b=noisy_data)
 regulariser = FunctionOperatorComposition(alpha * L2NormSquared(), operator)
 
 x_init = ig.allocate()
-opt = {'memopt':True}
-fista = FISTA(x_init=x_init , f=regulariser, g=fidelity, opt=opt)
-fista.max_iteration = 2000
-fista.update_objective_interval = 50
-fista.run(2000, verbose=False)
+fista = FISTA(x_init=x_init , f=regulariser, g=fidelity,
+              max_iteration = 1000,
+              update_objective_interval = 200)
+fista.run(verbose=True)
 ###############################################################################
 
 
 ###############################################################################
 # Setup and run the PDHG algorithm
-op1 = Gradient(ig)
+op1 = Gradient(ig, backend = 'numpy')
 op2 = Identity(ig, ag)
 
 operator = BlockOperator(op1, op2, shape=(2,1) )   
@@ -91,10 +90,10 @@ normK = operator.norm()
 sigma = 1
 tau = 1/(sigma*normK**2)
 
-pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma, memopt=True)
-pdhg.max_iteration = 2000
-pdhg.update_objective_interval = 200
-pdhg.run(2000, verbose=False)
+pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma,
+            max_iteration = 1000,
+            update_objective_interval = 200)
+pdhg.run(verbose=False)
 ###############################################################################
 
 # Show results

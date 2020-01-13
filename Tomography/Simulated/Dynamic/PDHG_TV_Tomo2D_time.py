@@ -30,6 +30,7 @@ from ccpi.optimisation.functions import ZeroFunction, KullbackLeibler, \
                       MixedL21Norm, BlockFunction
 
 from ccpi.astra.operators import AstraProjectorMC
+from ccpi.astra.processors import FBP
 
 import os
 import tomophantom
@@ -77,14 +78,24 @@ sin = Aop.direct(data)
 
 scale = 2
 n1 = scale * np.random.poisson(sin.as_array()/scale)
-noisy_data = AcquisitionData(n1, ag)
+noisy_data = ag.allocate()
+noisy_data.fill(n1)
+
+# Filtered back projection
+
+fbp = FBP(ig, ag, filter_type = 'hann', device = dev)
+fbp.set_input(noisy_data)
+fbp_recon = fbp.get_output()
+plt.imshow(fbp_recon.as_array()[10])
+plt.colorbar()
+plt.title('Filtered BackProjection')
+plt.show()
 
 # Regularisation Parameter
 alpha = 10
 
 # Create operators
-#op1 = Gradient(ig)
-op1 = Gradient(ig, correlation='SpaceChannels')
+op1 = Gradient(ig, correlation = 'SpaceChannels', backend = 'numpy')
 op2 = Aop
 
 # Create BlockOperator
@@ -93,7 +104,7 @@ operator = BlockOperator(op1, op2, shape=(2,1) )
 # Create functions
       
 f1 = alpha * MixedL21Norm()
-f2 = KullbackLeibler(noisy_data)    
+f2 = KullbackLeibler(b=noisy_data)    
 f = BlockFunction(f1, f2)
 g = ZeroFunction()
     
@@ -104,10 +115,10 @@ sigma = 5
 tau = 1/(sigma*normK**2)
 
 # Setup and run the PDHG algorithm
-pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma, memopt=True)
-pdhg.max_iteration = 1000
-pdhg.update_objective_interval = 200
-pdhg.run(1000)
+pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma, 
+            max_iteration = 1000,
+            update_objective_interval = 200)
+pdhg.run(verbose = True)
 
 
 tindex = [0, int(phantom_2Dt.shape[0]/2), phantom_2Dt.shape[0]-1]

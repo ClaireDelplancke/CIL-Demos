@@ -195,14 +195,16 @@ else:
     result = prob.solve(verbose = True, solver = solver)    
 
 
-plt.figure(figsize=(10,20))
+plt.figure(figsize=(20,5))
 
 plt.subplot(1,3,1)
-plt.imshow(np.reshape(u.value, (N, N)))    
+plt.imshow(np.reshape(u.value, (N, N)))
+plt.title('Regularised CVX')    
 plt.colorbar()
 
 plt.subplot(1,3,2)
 plt.imshow(cgls3.get_output().as_array())    
+plt.title('Regularised CGLS (Gradient)')   
 plt.colorbar()
 
 plt.subplot(1,3,3)
