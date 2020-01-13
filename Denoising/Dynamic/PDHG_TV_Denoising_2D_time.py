@@ -35,7 +35,7 @@ Problem:     min_{x} \alpha * ||\nabla x||_{2,1} + \frac{1}{2} * || x - g ||_{2}
                                                                 
 """
 
-from ccpi.framework import ImageData, ImageGeometry, TestData
+from ccpi.framework import ImageData, ImageGeometry
 
 import numpy as np 
 import numpy                          
@@ -48,7 +48,6 @@ from ccpi.optimisation.functions import ZeroFunction, L2NormSquared,  \
                       MixedL21Norm, BlockFunction
 
 import os
-import sys
 import tomophantom
 from tomophantom import TomoP2D
 import matplotlib.animation as animation
@@ -133,16 +132,14 @@ sigma2 = 1
 tau2 = 1/(sigma2*normK2**2)
 
 # Setup and run the PDHG algorithm
-pdhg1 = PDHG(f=f,g=g,operator=operator1, tau=tau1, sigma=sigma1)
-pdhg1.max_iteration = 2000
-pdhg1.update_objective_interval = 200
-pdhg1.run(1000)
+pdhg1 = PDHG(f=f,g=g,operator=operator1, tau=tau1, sigma=sigma1,
+             max_iteration = 2000, update_objective_interval = 200)
+pdhg1.run()
 
 # Setup and run the PDHG algorithm
-pdhg2 = PDHG(f=f,g=g,operator=operator2, tau=tau2, sigma=sigma2)
-pdhg2.max_iteration = 2000
-pdhg2.update_objective_interval = 200
-pdhg2.run(1000)
+pdhg2 = PDHG(f=f,g=g,operator=operator2, tau=tau2, sigma=sigma2,
+             max_iteration = 2000,update_objective_interval = 200)
+pdhg2.run()
 
 #%%
 tindex = [8, 16, 24]

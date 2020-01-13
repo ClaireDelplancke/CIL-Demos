@@ -97,10 +97,10 @@ normK = operator.norm()
 sigma = 1
 tau = 1/(sigma*normK**2)
 
-pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma, memopt=True)
-pdhg.max_iteration = 1000
-pdhg.update_objective_interval = 200
-pdhg.run(1000, verbose = True)
+pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma, 
+            max_iteration = 1000,
+            update_objective_interval = 100)
+pdhg.run(verbose = True)
 
 # Show results
 fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(10, 8))
