@@ -58,8 +58,9 @@ from ccpi.optimisation.functions import IndicatorBox, KullbackLeibler, ZeroFunct
                       MixedL21Norm, BlockFunction, L2NormSquared
 
 from ccpi.astra.operators import AstraProjectorSimple
-import os, sys
+from ccpi.astra.processors import FBP
 
+import os, sys
 
 import tomophantom
 from tomophantom import TomoP2D
@@ -68,7 +69,7 @@ from tomophantom import TomoP2D
 if len(sys.argv) > 1:
     which_noise = int(sys.argv[1])
 else:
-    which_noise = 1
+    which_noise = 0
     
 # Load Piecewise smooth Shepp-Logan phantom 
 model = 2 # select a model number from the library
@@ -105,10 +106,13 @@ noise = noises[which_noise]
 if noise == 'poisson':
     scale = 5
     eta = 0
-    noisy_data = AcquisitionData(np.random.poisson( scale * (eta + sin.as_array()))/scale, ag)
+    noisy_data = ag.allocate()
+    noisy_data.fill(np.random.poisson( scale * (eta + sin.as_array()))/scale)
 elif noise == 'gaussian':
     n1 = np.random.normal(0, 1, size = ag.shape)
-    noisy_data = AcquisitionData(n1 + sin.as_array(), ag)
+    noisy_date = ag.allocate()
+    noisy_data.fill(n1 + sin.as_array())
+    
 else:
     raise ValueError('Unsupported Noise ', noise)
 
@@ -124,11 +128,21 @@ plt.title('Noisy Data')
 plt.colorbar()
 plt.show()
 
+# Filtered back projection
+
+fbp = FBP(ig, ag, filter_type = 'hann', device = dev)
+fbp.set_input(noisy_data)
+fbp_recon = fbp.get_output()
+plt.imshow(fbp_recon.as_array())
+plt.colorbar()
+plt.title('Filtered BackProjection')
+plt.show()
+
 # Create Operators
-op11 = Gradient(ig)
+op11 = Gradient(ig, backend = 'numpy')
 op12 = Identity(op11.range_geometry())
 
-op22 = SymmetrizedGradient(op11.domain_geometry())    
+op22 = SymmetrizedGradient(op11.range_geometry())    
 op21 = ZeroOperator(ig, op22.range_geometry())
     
 op31 = Aop
@@ -141,7 +155,7 @@ normK = operator.norm()
 if noise == 'poisson':
     alpha = 2
     beta = 3
-    f3 = KullbackLeibler(noisy_data)    
+    f3 = KullbackLeibler(b=noisy_data)    
     g =  BlockFunction(IndicatorBox(lower=0), ZeroFunction()) 
     
     # Primal & dual stepsizes
@@ -166,10 +180,10 @@ f = BlockFunction(f1, f2, f3)
 normK = operator.norm()
 
 # Setup and run the PDHG algorithm
-pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma)
-pdhg.max_iteration = 1000
-pdhg.update_objective_interval = 200
-pdhg.run(1000)
+pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma,
+            max_iteration = 1000,
+            update_objective_interval = 200)
+pdhg.run(1000, verbose = True)
 
 plt.figure(figsize=(15,15))
 plt.subplot(3,1,1)

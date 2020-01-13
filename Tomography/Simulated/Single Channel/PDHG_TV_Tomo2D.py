@@ -49,6 +49,7 @@ from ccpi.optimisation.functions import ZeroFunction, L2NormSquared, \
                       MixedL21Norm, BlockFunction, KullbackLeibler, IndicatorBox
                       
 from ccpi.astra.operators import AstraProjectorSimple
+from ccpi.astra.processors import FBP
 
 import os, sys
 import tomophantom
@@ -58,7 +59,7 @@ from tomophantom import TomoP2D
 if len(sys.argv) > 1:
     which_noise = int(sys.argv[1])
 else:
-    which_noise = 0
+    which_noise = 1
     
 model = 1 # select a model number from the library
 N = 128 # set dimension of the phantom
@@ -70,8 +71,8 @@ data = ImageData(phantom_2D)
 ig = ImageGeometry(voxel_num_x=N, voxel_num_y=N)
 
 # Create acquisition data and geometry
-detectors = N
-angles = np.linspace(0, np.pi, 180)
+detectors = int(np.sqrt(2)*N) 
+angles = np.linspace(0, np.pi, 90)
 ag = AcquisitionGeometry('parallel','2D',angles, detectors)
 
 # Select device
@@ -91,10 +92,12 @@ noise = noises[which_noise]
 if noise == 'poisson':
     scale = 5
     eta = 0
-    noisy_data = AcquisitionData(np.random.poisson( scale * (eta + sin.as_array()))/scale, ag)
+    noisy_data = ag.allocate()
+    noisy_data.fill(np.random.poisson( scale * (eta + sin.as_array()))/scale)
 elif noise == 'gaussian':
     n1 = np.random.normal(0, 1, size = ag.shape)
-    noisy_data = AcquisitionData(n1 + sin.as_array(), ag)
+    noisy_date = ag.allocate()
+    noisy_data.fill(n1 + sin.as_array())
     
 else:
     raise ValueError('Unsupported Noise ', noise)
@@ -111,8 +114,19 @@ plt.title('Noisy Data')
 plt.colorbar()
 plt.show()
 
+# Filtered back projection
+
+fbp = FBP(ig, ag, filter_type = 'hann', device = dev)
+fbp.set_input(noisy_data)
+fbp_recon = fbp.get_output()
+plt.imshow(fbp_recon.as_array())
+plt.colorbar()
+plt.title('Filtered BackProjection')
+plt.show()
+
+
 # Create operators
-op1 = Gradient(ig)
+op1 = Gradient(ig, backend = 'numpy')
 op2 = Aop
 
 # Create BlockOperator
@@ -125,7 +139,7 @@ normK = operator.norm()
 if noise == 'poisson':
     
     alpha = 2
-    f2 = KullbackLeibler(noisy_data)  
+    f2 = KullbackLeibler(b=noisy_data)  
     g =  IndicatorBox(lower=0)    
     sigma = 1
     tau = 1/(sigma*normK**2)     
