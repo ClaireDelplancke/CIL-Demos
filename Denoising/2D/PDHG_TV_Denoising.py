@@ -65,17 +65,17 @@ from ccpi.framework import TestData
 import os
 import sys
 
-# user supplied input
+# user supplied input, noise and method
 if len(sys.argv) > 1:
     which_noise = int(sys.argv[1])
 else:
-    which_noise = 2
+    which_noise = 0
 print ("Applying {} noise")
 
 if len(sys.argv) > 2:
     method = sys.argv[2]
 else:
-    method = '1'
+    method = '0'
 print ("method ", method)
 
 
@@ -124,14 +124,14 @@ elif noise == 'gaussian':
 if noise == 's&p':
     f2 = L1Norm(b=noisy_data)
 elif noise == 'poisson':
-    f2 = KullbackLeibler(noisy_data)
+    f2 = KullbackLeibler(b=noisy_data)
 elif noise == 'gaussian':
     f2 = 0.5 * L2NormSquared(b=noisy_data)
 
 if method == '0':
 
     # Create operators
-    op1 = Gradient(ig, correlation=Gradient.CORRELATION_SPACE)
+    op1 = Gradient(ig, correlation=Gradient.CORRELATION_SPACE, backend = 'numpy')
     op2 = Identity(ig, ag)
 
     # Create BlockOperator
@@ -143,7 +143,7 @@ if method == '0':
     
 else:
     
-    operator = Gradient(ig)
+    operator = Gradient(ig, backend = 'numpy')
     f =  alpha * MixedL21Norm()
     g = f2
         
@@ -186,69 +186,69 @@ plt.show()
 
 #%% Check with CVX solution
 
-from ccpi.optimisation.operators import SparseFiniteDiff
-
-try:
-    from cvxpy import *
-    cvx = True
-except ImportError:
-    cvx = False
-
-if not cvx:
-    print("Install CVXPY module to compare with CVX solution")
-else:
-
-    ##Construct problem
-    u = Variable(ig.shape)
-    
-    DY = SparseFiniteDiff(ig, direction=0, bnd_cond='Neumann')
-    DX = SparseFiniteDiff(ig, direction=1, bnd_cond='Neumann')
-    
-    # Define Total Variation as a regulariser
-    regulariser = alpha * sum(norm(vstack([Constant(DX.matrix()) * vec(u), Constant(DY.matrix()) * vec(u)]), 2, axis = 0))
-    
-    # choose solver
-    if 'MOSEK' in installed_solvers():
-        solver = MOSEK
-    else:
-        solver = SCS      
-
-    # fidelity
-    if noise == 's&p':
-        fidelity = pnorm( u - noisy_data.as_array(),1)
-    elif noise == 'poisson':
-        fidelity = sum(kl_div(noisy_data.as_array(), u)) 
-        solver = SCS
-    elif noise == 'gaussian':
-        fidelity = 0.5 * sum_squares(noisy_data.as_array() - u)
-                
-    obj =  Minimize( regulariser +  fidelity)
-    prob = Problem(obj)
-
-    result = prob.solve(verbose = True, solver = solver, max_iters=10)
-    
-    diff_cvx = numpy.abs( pdhg.get_output().as_array() - u.value )
-        
-    plt.figure(figsize=(15,15))
-    plt.subplot(3,1,1)
-    plt.imshow(pdhg.get_output().as_array())
-    plt.title('PDHG solution')
-    plt.colorbar()
-    plt.subplot(3,1,2)
-    plt.imshow(u.value)
-    plt.title('CVX solution')
-    plt.colorbar()
-    plt.subplot(3,1,3)
-    plt.imshow(diff_cvx)
-    plt.title('Difference')
-    plt.colorbar()
-    plt.show()    
-    
-    plt.plot(np.linspace(0,ig.shape[1],ig.shape[1]), pdhg.get_output().as_array()[int(ig.shape[0]/2),:], label = 'PDHG')
-    plt.plot(np.linspace(0,ig.shape[1],ig.shape[1]), u.value[int(ig.shape[0]/2),:], label = 'CVX')
-    plt.legend()
-    plt.title('Middle Line Profiles')
-    plt.show()
-            
-    print('Primal Objective (CVX) {} '.format(obj.value))
-    print('Primal Objective (PDHG) {} '.format(pdhg.objective[-1][0]))
+#from ccpi.optimisation.operators import SparseFiniteDiff
+#
+#try:
+#    from cvxpy import *
+#    cvx = True
+#except ImportError:
+#    cvx = False
+#
+#if not cvx:
+#    print("Install CVXPY module to compare with CVX solution")
+#else:
+#
+#    ##Construct problem
+#    u = Variable(ig.shape)
+#    
+#    DY = SparseFiniteDiff(ig, direction=0, bnd_cond='Neumann')
+#    DX = SparseFiniteDiff(ig, direction=1, bnd_cond='Neumann')
+#    
+#    # Define Total Variation as a regulariser
+#    regulariser = alpha * sum(norm(vstack([Constant(DX.matrix()) * vec(u), Constant(DY.matrix()) * vec(u)]), 2, axis = 0))
+#    
+#    # choose solver
+#    if 'MOSEK' in installed_solvers():
+#        solver = MOSEK
+#    else:
+#        solver = SCS      
+#
+#    # fidelity
+#    if noise == 's&p':
+#        fidelity = pnorm( u - noisy_data.as_array(),1)
+#    elif noise == 'poisson':
+#        fidelity = sum(kl_div(noisy_data.as_array(), u)) 
+#        solver = SCS
+#    elif noise == 'gaussian':
+#        fidelity = 0.5 * sum_squares(noisy_data.as_array() - u)
+#                
+#    obj =  Minimize( regulariser +  fidelity)
+#    prob = Problem(obj)
+#
+#    result = prob.solve(verbose = True, solver = solver, max_iters=10)
+#    
+#    diff_cvx = numpy.abs( pdhg.get_output().as_array() - u.value )
+#        
+#    plt.figure(figsize=(15,15))
+#    plt.subplot(3,1,1)
+#    plt.imshow(pdhg.get_output().as_array())
+#    plt.title('PDHG solution')
+#    plt.colorbar()
+#    plt.subplot(3,1,2)
+#    plt.imshow(u.value)
+#    plt.title('CVX solution')
+#    plt.colorbar()
+#    plt.subplot(3,1,3)
+#    plt.imshow(diff_cvx)
+#    plt.title('Difference')
+#    plt.colorbar()
+#    plt.show()    
+#    
+#    plt.plot(np.linspace(0,ig.shape[1],ig.shape[1]), pdhg.get_output().as_array()[int(ig.shape[0]/2),:], label = 'PDHG')
+#    plt.plot(np.linspace(0,ig.shape[1],ig.shape[1]), u.value[int(ig.shape[0]/2),:], label = 'CVX')
+#    plt.legend()
+#    plt.title('Middle Line Profiles')
+#    plt.show()
+#            
+#    print('Primal Objective (CVX) {} '.format(obj.value))
+#    print('Primal Objective (PDHG) {} '.format(pdhg.objective[-1][0]))

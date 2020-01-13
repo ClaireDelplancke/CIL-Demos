@@ -32,15 +32,14 @@ Problem:     min_u  \alpha * ||\nabla u||_{2,1} + ||x-g||_{1}
              K = \nabla    
                           
 """
-
-import numpy                          
+                         
 import matplotlib.pyplot as plt
 
 from ccpi.optimisation.algorithms import PDHG
 
-from ccpi.optimisation.operators import Gradient, BlockOperator, FiniteDiff
-from ccpi.optimisation.functions import MixedL21Norm, L2NormSquared, BlockFunction, L1Norm, KullbackLeibler                     
-from ccpi.framework import TestData, ImageGeometry
+from ccpi.optimisation.operators import Gradient
+from ccpi.optimisation.functions import MixedL21Norm, L2NormSquared, L1Norm, KullbackLeibler                     
+from ccpi.framework import TestData
 import os
 import sys
 
@@ -48,7 +47,7 @@ import sys
 if len(sys.argv) > 1:
     which_noise = int(sys.argv[1])
 else:
-    which_noise = 0
+    which_noise = 2
 print ("Applying {} noise")
 
 loader = TestData(data_dir=os.path.join(sys.prefix, 'share','ccpi'))
@@ -100,7 +99,7 @@ f1 =  alpha * MixedL21Norm()
 if noise == 's&p':
     g = L1Norm(b=noisy_data)
 elif noise == 'poisson':
-    g = KullbackLeibler(noisy_data)
+    g = KullbackLeibler(b=noisy_data)
 elif noise == 'gaussian':
     g = 0.5 * L2NormSquared(b=noisy_data)
             

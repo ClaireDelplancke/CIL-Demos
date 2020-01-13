@@ -112,7 +112,7 @@ plt.show()
 
 # Regularisation Parameter depending on the noise distribution
 if noise == 's&p':
-    alpha = 20
+    alpha = 50
 elif noise == 'poisson':
     alpha = 10
 elif noise == 'gaussian':
@@ -122,14 +122,14 @@ elif noise == 'gaussian':
 if noise == 's&p':
     f2 = L1Norm(b=noisy_data)
 elif noise == 'poisson':
-    f2 = KullbackLeibler(noisy_data)
+    f2 = KullbackLeibler(b=noisy_data)
 elif noise == 'gaussian':
     f2 = 0.5 * L2NormSquared(b=noisy_data)    
 
 if method == '0':
 
     # Create operators
-    op1 = Gradient(ig)
+    op1 = Gradient(ig, backend = 'numpy')
     op2 = Identity(ig, ag)
 
     # Create BlockOperator
@@ -142,7 +142,7 @@ if method == '0':
     
 else:
     
-    operator = Gradient(ig)
+    operator = Gradient(ig, backend = 'numpy')
     g = f2
         
     
@@ -171,7 +171,7 @@ plt.title('Noisy Data')
 plt.colorbar()
 plt.subplot(1,4,3)
 plt.imshow(pdhg.get_output().as_array())
-plt.title('TV Reconstruction')
+plt.title('Tikhonov Reconstruction')
 plt.colorbar()
 plt.subplot(1,4,4)
 plt.plot(np.linspace(0,ig.shape[1],ig.shape[1]), data.as_array()[int(ig.shape[0]/2),:], label = 'GTruth')

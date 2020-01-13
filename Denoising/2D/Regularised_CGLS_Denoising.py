@@ -32,8 +32,7 @@ Problem:     min_u alpha * || L x ||^{2}_{2} + || A u - g ||_{2}^{2}
 """
 
 
-from ccpi.framework import ImageGeometry, ImageData, \
-                            AcquisitionGeometry, BlockDataContainer, AcquisitionData
+from ccpi.framework import ImageData, BlockDataContainer
 
 import numpy as np 
 import numpy                          
@@ -68,7 +67,7 @@ plt.show()
 # Setup and run the regularised CGLS algorithm  (Tikhonov with Gradient)
 x_init = ig.allocate() 
 alpha = 2
-op = Gradient(ig)
+op = Gradient(ig, backend = 'numpy')
 
 block_op = BlockOperator( Identity(ig), alpha * op, shape=(2,1))
 block_data = BlockDataContainer(noisy_data, op.range_geometry().allocate())
