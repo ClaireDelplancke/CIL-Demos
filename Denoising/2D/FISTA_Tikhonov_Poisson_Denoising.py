@@ -78,10 +78,10 @@ fid = KullbackLeibler(b=noisy_data)
 reg = FunctionOperatorComposition(alpha * L2NormSquared(), operator)
 
 x_init = ig.allocate()
-fista = FISTA(x_init=x_init , f=reg, g=fid)
-fista.max_iteration = 3000
-fista.update_objective_interval = 500
-fista.run(3000, verbose=True)
+fista = FISTA(x_init=x_init , f=reg, g=fid,
+              max_iteration = 1000,
+              update_objective_interval = 200)
+fista.run(verbose=True)
 
 # Show results
 plt.figure(figsize=(15,15))

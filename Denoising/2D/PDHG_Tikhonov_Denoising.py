@@ -153,11 +153,11 @@ normK = operator.norm()
 sigma = 1
 tau = 1/(sigma*normK**2)
 
-# Setup and run the PDHG algorithm
-pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma)
-pdhg.max_iteration = 2000
-pdhg.update_objective_interval = 100
-pdhg.run(2000)
+pdhg = PDHG(f=f,g=g,operator=operator, tau=tau, sigma=sigma, 
+            max_iteration = 1000,
+            update_objective_interval = 100)
+pdhg.run()
+
 
 
 plt.figure(figsize=(20,5))

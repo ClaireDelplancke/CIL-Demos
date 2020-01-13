@@ -72,10 +72,10 @@ op = Gradient(ig, backend = 'numpy')
 block_op = BlockOperator( Identity(ig), alpha * op, shape=(2,1))
 block_data = BlockDataContainer(noisy_data, op.range_geometry().allocate())
    
-cgls = CGLS(x_init=x_init, operator = block_op, data = block_data)
-cgls.max_iteration = 200
-cgls.update_objective_interval = 5
-cgls.run(200, verbose = True)
+cgls = CGLS(x_init=x_init, operator = block_op, data = block_data,
+            max_iteration = 200,
+            update_objective_interval = 20)
+cgls.run(verbose = True)
 
 # Show results
 plt.figure(figsize=(20,10))
