@@ -47,10 +47,8 @@ from ccpi.optimisation.functions import L2NormSquared, MixedL21Norm
 
 import timeit
 import os
-import sys
 from tomophantom import TomoP3D
 import tomophantom
-import numpy
 
 # Create a phantom from Tomophantom
 print ("Building 3D phantom using TomoPhantom software")
@@ -90,7 +88,7 @@ plt.show()
 alpha = 0.05
     
 # Setup and run the PDHG algorithm
-operator = Gradient(ig)
+operator = Gradient(ig, backend = 'numpy')
 f =  alpha * MixedL21Norm()
 g =  0.5 * L2NormSquared(b = noisy_data)
             

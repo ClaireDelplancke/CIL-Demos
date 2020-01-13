@@ -106,8 +106,8 @@ plt.show()
 alpha = 0.3
 
 # Create Gradient operators with different Space - Channel correlation
-op1 = Gradient(ig, correlation='Space') # No gradient in temporal direction
-op2 = Gradient(ig, correlation='SpaceChannels') # SpatioTemporal Gradient
+op1 = Gradient(ig, correlation='Space', backend = 'numpy') # No gradient in temporal direction
+op2 = Gradient(ig, correlation='SpaceChannels', backend = 'numpy') # SpatioTemporal Gradient
 op3 = Identity(ig, ag)
 
 # Create BlockOperator
