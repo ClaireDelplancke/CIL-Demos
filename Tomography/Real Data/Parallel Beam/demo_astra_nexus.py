@@ -11,7 +11,7 @@
 # All own imports
 from ccpi.framework import ImageData, ImageGeometry
 from ccpi.optimisation.algorithms import CGLS, FISTA
-from ccpi.optimisation.functions import Norm2Sq, L1Norm
+from ccpi.optimisation.functions import LeastSquares, L1Norm
 from ccpi.processors import CenterOfRotationFinder 
 from ccpi.io import NEXUSDataReader
 from ccpi.astra.operators import AstraProjector3DSimple
@@ -69,7 +69,7 @@ plt.show()
 
 # Set initial guess for reconstruction algorithms.
 print ("Initial guess")
-x_init = ImageData(geometry=ig)
+x_init = ig.allocate(0)
 
 # Set tolerance and number of iterations for reconstruction algorithms.
 opt = {'tol': 1e-4, 'iter': 100}
@@ -122,7 +122,7 @@ plt.show()
 
 # Create least squares object instance with projector and data.
 print ("Create least squares object instance with projector and data.")
-f = Norm2Sq(Cop,padded_data,c=0.5)
+f = LeastSquares(Cop,padded_data,c=0.5)
 
 # Run FISTA for least squares without constraints
 FISTA_alg = FISTA()
