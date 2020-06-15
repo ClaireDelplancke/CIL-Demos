@@ -138,7 +138,7 @@ if method == '0':
     op11 = Gradient(ig)
     op12 = Identity(op11.range_geometry())
     
-    op22 = SymmetrizedGradient(op11.domain_geometry())    
+    op22 = SymmetrizedGradient(op11.range_geometry())    
     op21 = ZeroOperator(ig, op22.range_geometry())
         
     op31 = Identity(ig, ag)
